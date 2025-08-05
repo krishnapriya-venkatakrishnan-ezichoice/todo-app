@@ -23,7 +23,7 @@ function App() {
   }
   else {
     console.log(session.user.email);
-    return (<div>Logged in! Hi {session.user.email}</div>)
+    return (<div className='text-2xl text-center'>Logged in! Hi {session.user.email}</div>)
   }
 }
 

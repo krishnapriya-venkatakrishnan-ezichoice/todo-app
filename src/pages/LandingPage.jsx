@@ -1,7 +1,11 @@
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
+import { useNavigate } from 'react-router-dom';
 
-const LandingPage = ({ handlePageChange }) => {
+const LandingPage = () => {
+
+  const navigate = useNavigate();
+
   return (
     <main className='w-screen h-screen flex items-center justify-center'>
       <section className="min-w-xl border-2 border-green-700 shadow-2xl p-8 rounded-xl">
@@ -17,14 +21,14 @@ const LandingPage = ({ handlePageChange }) => {
               backgroundColor: '#43a047',
               '&:hover': { backgroundColor: '#2e7031' }
             }}
-            onClick={() => handlePageChange('sign-in')}
+            onClick={() => navigate('/sign-in')}
             >Sign In</Button>
             <Button variant="contained"
             sx={{
               backgroundColor: '#43a047',
               '&:hover': { backgroundColor: '#2e7031' }
             }}
-            onClick={() => handlePageChange('sign-up')}
+            onClick={() => navigate('/sign-up')}
             >Sign Up</Button>
           </Stack>
         </div>

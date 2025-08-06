@@ -5,6 +5,8 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const temp = [
   {
@@ -21,9 +23,12 @@ const temp = [
   }
 ];
 
-const ToDoPage = ({ handlePageChange }) => {
+const ToDoPage = () => {
 
+  const { supabase, session } = useAuth();
+  console.log('Session:', session); 
   const [data, setData] = React.useState(temp);
+  const navigate = useNavigate();
 
   const handleChange = (event, id) => {
     setData(prevData => {
@@ -36,11 +41,26 @@ const ToDoPage = ({ handlePageChange }) => {
     });
   };
 
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error.message);
+      } else {
+        console.log('User signed out successfully.');
+        // You can redirect the user or update the UI here
+        navigate('landing');
+      }
+    } catch (error) {
+      console.error('Sign out failed:', error.message);
+    }
+  }
+
   return (
     <main>
       <div className='w-full flex items-end justify-between '>
         <div>
-
+          <h1>Hi {session?.user.email}</h1>
         </div>
         <div className='pr-4 pt-4'>
           <Button variant="contained"
@@ -48,7 +68,8 @@ const ToDoPage = ({ handlePageChange }) => {
             backgroundColor: '#43a047',
             '&:hover': { backgroundColor: '#2e7031' }
           }}
-          onClick={() => handlePageChange('landing')}
+          // onClick={() => handlePageChange('landing')}
+          onClick={handleSignOut}
           >Sign Out</Button>
         </div>
       </div>

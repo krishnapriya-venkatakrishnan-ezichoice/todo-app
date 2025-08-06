@@ -1,10 +1,13 @@
-import SignInForm from '../components/SignInForm'
+import { useNavigate } from 'react-router-dom';
+import SignInForm from '../components/SignInForm';
 
-const SignInPage = ({ handlePageChange }) => {
+const SignInPage = () => {
+  const navigate = useNavigate();
+  
   return (
     <main className='w-screen h-screen flex items-center justify-center flex-col gap-4'>
-      <SignInForm handlePageChange={handlePageChange} />
-      <p>Don't have an account, <span className='underline cursor-pointer' onClick={() => handlePageChange('sign-up')}>Sign Up!</span></p>
+      <SignInForm />
+      <p>Don't have an account, <span className='underline cursor-pointer' onClick={() => navigate('/sign-up')}>Sign Up!</span></p>
     </main>
   )
 }

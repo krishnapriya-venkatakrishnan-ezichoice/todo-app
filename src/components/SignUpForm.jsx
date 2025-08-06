@@ -1,20 +1,51 @@
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { Box, Button, Container, IconButton, InputAdornment, TextField } from '@mui/material';
+import { Box, Button, Container, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 
-function SignUpForm({ handlePageChange }) {
+function SignUpForm() {
+
+  const { supabase } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log('Form submitted:', { password, email });
-    // You would typically send this data to an API here
-    handlePageChange('to-do'); // Redirect to To-Do page after sign-up
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: "http://localhost:5173/auth/callback",
+        }
+      });
+
+      if (error) {
+        setMessage(`Error signing up: ${error.message}`);
+      } else {
+        console.log('Sign up successful:', data);
+        setMessage('Check your email for the confirmation link!');
+        setEmail('');
+        setPassword('');
+      }
+    } catch (error) {
+      console.error('Error signing up:', error.message); 
+      setMessage('An unexpected error occurred. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+    
   };
+
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -68,8 +99,14 @@ function SignUpForm({ handlePageChange }) {
           backgroundColor: '#43a047',
           '&:hover': { backgroundColor: '#2e7031' }
         }}>
-          Sign Up With Credentials
+          {loading ? "Signing up..." : "Sign Up With Credentials"}
         </Button>
+        {message && (
+          <Typography
+          color={message.includes('Error') ? 'error.main' : 'success.main'}
+          sx={{textAlign: 'center'}}
+          >{message}</Typography>
+        )}
       </Box>
     </Container>
   );

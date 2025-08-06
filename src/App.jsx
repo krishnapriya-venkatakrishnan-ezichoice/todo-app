@@ -1,30 +1,34 @@
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { createClient } from '@supabase/supabase-js';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import LandingPage from './pages/LandingPage';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
+import ToDoPage from './pages/ToDoPage';
 
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
+const App = () => {
+  const [page, setPage] = useState('to-do');
 
-function App() {
-  const [session, setSession] = useState(null)
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-    })
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-  if (!session) {
-    return (<Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />)
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
   }
-  else {
-    console.log(session.user.email);
-    return (<div className='text-2xl text-center'>Logged in! Hi {session.user.email}</div>)
+
+  const renderPage = () => {
+    switch(page) {
+      case "landing":
+        return <LandingPage handlePageChange={handlePageChange} />;
+      case "sign-up":
+        return <SignUpPage handlePageChange={handlePageChange} />;
+      case "sign-in":
+        return <SignInPage handlePageChange={handlePageChange} />;
+      case "to-do":
+        return <ToDoPage handlePageChange={handlePageChange} />;
+      default:
+        return <LandingPage handlePageChange={handlePageChange} />;
+    }
   }
+
+  return (
+    renderPage()
+  )
 }
 
 export default App

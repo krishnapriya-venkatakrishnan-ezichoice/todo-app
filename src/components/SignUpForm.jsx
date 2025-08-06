@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 function SignUpForm() {
 
   const { supabase } = useAuth();
-
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +26,9 @@ function SignUpForm() {
         password,
         options: {
           emailRedirectTo: "http://localhost:5173/auth/callback",
+          data: {
+            username
+          }
         }
       });
 
@@ -34,11 +37,12 @@ function SignUpForm() {
       } else {
         console.log('Sign up successful:', data);
         setMessage('Check your email for the confirmation link!');
+        setUsername('');
         setEmail('');
         setPassword('');
       }
     } catch (error) {
-      console.error('Error signing up:', error.message); 
+      console.error('An unexpected error occurred:', error.message); 
       setMessage('An unexpected error occurred. Please try again later.');
     } finally {
       setLoading(false);
@@ -61,6 +65,15 @@ function SignUpForm() {
           gap: 2 
         }}
       >
+        <TextField
+          label="Username"
+          variant="outlined"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          fullWidth
+          required
+        />
         <TextField
           label="Email"
           variant="outlined"
@@ -95,6 +108,7 @@ function SignUpForm() {
           required
         />
         <Button variant="contained" type="submit"
+        disabled={loading}
         sx={{
           backgroundColor: '#43a047',
           '&:hover': { backgroundColor: '#2e7031' }

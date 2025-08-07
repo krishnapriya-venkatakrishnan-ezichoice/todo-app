@@ -9,8 +9,12 @@ const AuthCallbackPage  = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    if (!loading && session) {
-      navigate('/to-do');
+    if (!loading) {
+      if (session) {
+        navigate('/to-do');
+      } else {
+        navigate('/sign-in');
+      }
     }
   }, [loading, session, navigate]);
 
@@ -21,10 +25,6 @@ const AuthCallbackPage  = () => {
         <Typography>Confirming your email...</Typography>
       </Box>
     )
-  }
-
-  if (!session) {
-    navigate('/sign-in');
   }
 
   return null;

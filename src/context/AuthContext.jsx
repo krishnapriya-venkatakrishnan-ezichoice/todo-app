@@ -16,9 +16,14 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    console.log("AuthContext useEffect mounted", import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
     // Define the handler function first.
-    const handleAuthChange = async (event, currentSession) => {
-      setSession(currentSession);
+    const handleAuthChange = async (event, currentSession) => 
+    
+      {
+      console.log("AuthContext useEffect triggered with event:", event, "and session:", currentSession);
+      try {
+        setSession(currentSession);
       setProfile(null);
       setTasks([]);
       setIsAuthenticated(!!currentSession?.user?.email_confirmed_at);
@@ -65,16 +70,24 @@ export const AuthProvider = ({ children }) => {
           setTasks(tasksData);
         }
       }
-
-      setLoading(false);
+      } catch (err) {
+        console.error('Auth handler error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     // Now, call the functions that use the handler.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
+    console.log("Before getSession");
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("After getSession", session);
       handleAuthChange('INITIAL', session);
-    });
+    }).catch((error) => {
+    console.error('Error getting session:', error);
+    setLoading(false);
+  });
 
     return () => subscription.unsubscribe();
   }, []);

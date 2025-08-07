@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
+const url = import.meta.env.VITE_SUPABASE_REDIRECT_URL || 'http://localhost:5173';
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -39,7 +41,7 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
         options: {
-          emailRedirectTo: "http://localhost:5173/auth/callback",
+          emailRedirectTo: `${url}/auth/callback`,
           data: { username }
         }
       });
@@ -70,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "http://localhost:5173/auth/callback",
+          redirectTo: `${url}/auth/callback`,
         }
       });
 

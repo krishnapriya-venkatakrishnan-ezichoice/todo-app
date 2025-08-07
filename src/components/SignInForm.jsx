@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function SignInForm() {
-  const { supabase } = useAuth();
+  const { signInWithPassword, signInWithOAuth } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,19 +31,17 @@ function SignInForm() {
   const handleSignInWithGoogle = async () => {
     setLoading(true);
     setMessage('');
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: "http://localhost:5173/auth/callback",
-      }
-    });
 
-    if (error) {
-      setMessage(`Error signing in with Google: ${error.message}`);
-    } else {
+    try {
+      await signInWithOAuth();
+
       setMessage('Redirecting to Google sign-in...');
+    } catch (error) {
+      setMessage('An unexpected error occurred. Please try again later.', error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+
   }
 
   const handleSubmit = async (event) => {
@@ -52,21 +50,15 @@ function SignInForm() {
     setMessage('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        setMessage(`Error signing in: ${error.message}`);
-      } else {
-        setMessage('Sign in successful! Redirecting...');
-        setEmail('');
-        setPassword('');
-        navigate('/to-do');
-      }
+      await signInWithPassword(email, password);
+      
+      setMessage('Sign in successful! Redirecting...');
+      setEmail('');
+      setPassword('');
+      navigate('/to-do');
+      
     } catch (error) {
-      setMessage('An unexpected error occurred. Please try again later.');
+      setMessage('An unexpected error occurred. Please try again later.', error.message);
     } finally {
       setLoading(false);
     }
@@ -157,7 +149,7 @@ function SignInForm() {
             </Button>
             {message && (
               <Alert
-                severity={message.includes('Error') ? 'error' : 'success'}
+                severity={message.includes('error') ? 'error' : 'success'}
                 sx={{ mt: 1, textAlign: 'center' }}
               >
                 {message}

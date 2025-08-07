@@ -1,110 +1,96 @@
 import { createClient } from '@supabase/supabase-js';
+
 import { createContext, useContext, useEffect, useState } from 'react';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
+  
   useEffect(() => {
-    debugger;
-    console.log("AuthContext useEffect mounted", import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
-    // Define the handler function first.
-    const handleAuthChange = async (event, currentSession) => 
-    
-      {
-      console.log("AuthContext useEffect triggered with event:", event, "and session:", currentSession);
-      try {
-        setSession(currentSession);
-      setProfile(null);
-      setTasks([]);
-      setIsAuthenticated(!!currentSession?.user?.email_confirmed_at);
-
-      if (currentSession && currentSession.user.email_confirmed_at) {
-        // Fetch profile
-        console.log("Fetching profile for user:", currentSession.user.email_confirmed_at);
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentSession.user.id)
-          .single();
-        console.log("Profile data:", profileData, "Error:", profileError);
-        if (profileError && profileError.code === 'PGRST116') {
-          const newProfile = {
-            id: currentSession.user.id,
-            username: currentSession.user.user_metadata.username || currentSession.user.user_metadata.name || currentSession.user.email,
-          };
-          const { data: createdProfile, error: createError } = await supabase
-            .from("profiles")
-            .insert(newProfile)
-            .select()
-            .single();
-          console.log("Created profile:", createdProfile, "Error:", createError);
-          if (createError) {
-            console.error('Error creating profile:', createError.message);
-          } else {
-            setProfile(createdProfile);
-          }
-        } else if (profileData) {
-          setProfile(profileData);
-        } else {
-          console.error('Error fetching profile:', profileError ? profileError.message : 'No data returned');
-        }
-
-        // Fetch tasks
-        const { data: tasksData, error: tasksError } = await supabase
-          .from("tasks")
-          .select("*")
-          .eq("user_id", currentSession.user.id);
-        console.log("Tasks data:", tasksData, "Error:", tasksError);
-        if (tasksError) {
-          console.error('Error fetching tasks:', tasksError.message);
-        } else {
-          setTasks(tasksData);
-        }
-      }
-      } catch (err) {
-        console.error('Auth handler error:', err);
-      } finally {
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
         setLoading(false);
-      }
-    };
-
-    // Now, call the functions that use the handler.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-
-    console.log("Before getSession");
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("After getSession", session);
-      handleAuthChange('INITIAL', session);
-    }).catch((error) => {
-    console.error('Error getting session:', error);
-    setLoading(false);
-  });
+      });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session)
+      });
 
     return () => subscription.unsubscribe();
   }, []);
+  
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error)
+        throw new Error('Error signing out:', error.message);
+    } catch (error) {
+      throw new Error('Sign out failed:', error.message);
+    }
+  }
 
-  const value = { supabase, session, loading, profile, tasks, isAuthenticated, setTasks };
+  const signUp = async (username, email, password) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: "http://localhost:5173/auth/callback",
+          data: { username }
+        }
+      });
+      
+      if (error)
+        throw new Error('Error signing up: ', error.message);
+    } catch (error) {
+      throw new Error('Sign up functionality is not implemented yet.', error.message);
+    }
+  }
 
-  console.log("AuthContext value:", value);
+  const signInWithPassword = async(email, password) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error)
+        throw new Error('Error signing in: ', error.message);
+    } catch (error) {
+      throw new Error('An unexpected error occurred. Please try again later.', error.message);
+    }
+  }
+
+  const signInWithOAuth = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: "http://localhost:5173/auth/callback",
+        }
+      });
+
+      if (error)
+        throw new Error('Error signing in with Google: ', error.message);
+    } catch (error) {
+      throw new Error('An unexpected error occurred. Please try again later.', error.message);
+    }
+  }
+
+  const value = { supabase, session, loading, signOut, signUp, signInWithPassword, signInWithOAuth };
+
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
-  );
+  )
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   return useContext(AuthContext);
-};
+}

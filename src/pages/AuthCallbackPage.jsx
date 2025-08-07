@@ -6,12 +6,10 @@ import { useAuth } from "../context/AuthContext";
 const AuthCallbackPage  = () => {
   
   const { session, loading } = useAuth();
-  console.log("AuthCallbackPage rendered", session, loading);
   const navigate = useNavigate();
   
   useEffect(() => {
     if (!loading && session) {
-      console.log("Session exists, redirecting to ToDo page");
       navigate('/to-do');
     }
   }, [loading, session, navigate]);

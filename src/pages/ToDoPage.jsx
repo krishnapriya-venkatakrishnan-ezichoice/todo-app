@@ -7,6 +7,7 @@ import {
   Card,
   CardActions,
   CardContent,
+  CircularProgress,
   Container,
   Dialog,
   DialogActions,
@@ -22,16 +23,18 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const ToDoPage = () => {
-  const { supabase, tasks, setTasks, profile } = useAuth();
+  const { supabase, session, signOut } = useAuth();
   const [showDialog, setShowDialog] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [adding, setAdding] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [tasks, setTasks] = useState([]);
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -91,18 +94,56 @@ const ToDoPage = () => {
     setDeleting(null);
   };
 
+  useEffect(()=> {
+    if (!session) return;
+    const fetchProfile = async () => {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError.message);
+      } else {
+        setProfile(profileData);
+      }
+    };
+    fetchProfile();
+
+    const fetchTasks = async () => {
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', session.user.id);
+
+      if (tasksError) {
+        console.error('Error fetching tasks:', tasksError.message);
+      } else {
+        setTasks(tasksData);
+      }
+    }
+    fetchTasks();
+  }, [session, supabase]);
+
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error.message);
-      } else {
-        window.location.reload();
-      }
-    } catch (error) {
+      await signOut();
+    } catch(error) {
       console.error('Sign out failed:', error.message);
     }
   };
+
+  if (!profile) {
+    return (
+      <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', gap: 4}}>
+        <CircularProgress />
+        <Typography color="text.secondary" sx={{ mt: 2 }}>
+          Loading tasks...
+        </Typography>
+      </Container>
+    )
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>

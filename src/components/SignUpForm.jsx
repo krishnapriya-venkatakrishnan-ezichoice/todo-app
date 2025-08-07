@@ -17,7 +17,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 function SignUpForm() {
-  const { supabase } = useAuth();
+  const { signUp } = useAuth();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,25 +31,15 @@ function SignUpForm() {
     setMessage('');
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: "http://localhost:5173/auth/callback",
-          data: { username }
-        }
-      });
-
-      if (error) {
-        setMessage(`Error signing up: ${error.message}`);
-      } else {
-        setMessage('Check your email for the confirmation link!');
-        setUsername('');
-        setEmail('');
-        setPassword('');
-      }
+      await signUp(username, email, password);
+      
+      setMessage('Check your email for the confirmation link!');
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      
     } catch (error) {
-      setMessage('An unexpected error occurred. Please try again later.');
+      setMessage('An unexpected error occurred. Please try again later.', error.message);
     } finally {
       setLoading(false);
     }
@@ -136,7 +126,7 @@ function SignUpForm() {
             </Button>
             {message && (
               <Alert
-                severity={message.includes('Error') ? 'error' : 'success'}
+                severity={message.includes('error') ? 'error' : 'success'}
                 sx={{ mt: 1, textAlign: 'center' }}
               >
                 {message}

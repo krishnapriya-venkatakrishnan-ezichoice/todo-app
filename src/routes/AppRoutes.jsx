@@ -1,3 +1,4 @@
+import { CircularProgress, Container } from "@mui/material";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AuthCallbackPage from '../pages/AuthCallbackPage';
@@ -10,10 +11,15 @@ const AppRoutes = () => {
 
   const { session, loading } = useAuth();
   
-  console.log("Session in App:", session);
-
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+        <Typography color="text.secondary" sx={{ mt: 2 }}>
+          Loading...
+        </Typography>
+      </Container>
+    );
   }
 
   return (

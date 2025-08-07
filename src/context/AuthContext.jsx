@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    debugger;
     console.log("AuthContext useEffect mounted", import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
     // Define the handler function first.
     const handleAuthChange = async (event, currentSession) => 
@@ -30,12 +31,13 @@ export const AuthProvider = ({ children }) => {
 
       if (currentSession && currentSession.user.email_confirmed_at) {
         // Fetch profile
+        console.log("Fetching profile for user:", currentSession.user.email_confirmed_at);
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", currentSession.user.id)
           .single();
-
+        console.log("Profile data:", profileData, "Error:", profileError);
         if (profileError && profileError.code === 'PGRST116') {
           const newProfile = {
             id: currentSession.user.id,
@@ -46,7 +48,7 @@ export const AuthProvider = ({ children }) => {
             .insert(newProfile)
             .select()
             .single();
-
+          console.log("Created profile:", createdProfile, "Error:", createError);
           if (createError) {
             console.error('Error creating profile:', createError.message);
           } else {
@@ -63,7 +65,7 @@ export const AuthProvider = ({ children }) => {
           .from("tasks")
           .select("*")
           .eq("user_id", currentSession.user.id);
-        
+        console.log("Tasks data:", tasksData, "Error:", tasksError);
         if (tasksError) {
           console.error('Error fetching tasks:', tasksError.message);
         } else {
